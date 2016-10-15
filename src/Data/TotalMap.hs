@@ -1,12 +1,25 @@
-module Data.TotalMap where
+module Data.TotalMap( TotalMap()
+                    , compose
+                    , fromList
+                    , (!)
+                    , find
+                    , lookup
+                    , insert
+                    , foldJoinSemiLattice
+                    , foldMeetSemiLattice
+) where
 
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Prelude hiding (lookup)
 import Data.These (These (..))
 import Data.Align (alignWith)
+import Data.Universe
+import Algebra.Lattice
 
-data TotalMap k a = TotalMap { otherwise :: a
+import Test.QuickCheck
+
+data TotalMap k a = TotalMap { defaultValue :: a
                              , values :: Map k a
                              } deriving (Show,Eq)
 
@@ -19,6 +32,10 @@ instance (Ord k) => Applicative (TotalMap k) where
         where combine (These g y) = g y
               combine (This g) = g x
               combine (That y) = f y
+
+instance (Ord k, Arbitrary k, Arbitrary a) => Arbitrary (TotalMap k a) where
+    arbitrary =  TotalMap <$> arbitrary <*> arbitrary
+
 
 join' :: (Ord k) => TotalMap k (TotalMap k a) -> TotalMap k a
 join' (TotalMap (TotalMap d defs) ms) = TotalMap d m
@@ -49,8 +66,15 @@ lookup = flip (!)
 insert :: Ord k => k -> a -> TotalMap k a -> TotalMap k a
 insert key x (TotalMap def m) = TotalMap def (Map.insert key x m)
 
-and :: TotalMap k Bool -> Bool
-and (TotalMap b m) = Map.fold (&&) b m
+foldJoinSemiLattice :: (Universe k, Ord k, JoinSemiLattice a) => a -> TotalMap k a -> a
+foldJoinSemiLattice = foldIdemOverKeys (\/) universe
 
-or :: TotalMap k Bool -> Bool
-or (TotalMap b m) = Map.fold (||) b m
+foldMeetSemiLattice :: (Universe k, Ord k, MeetSemiLattice a) => a -> TotalMap k a -> a
+foldMeetSemiLattice = foldIdemOverKeys (/\) universe
+
+foldIdemOverKeys :: (Ord k) => (a -> a -> a) -> [k] -> a -> TotalMap k a -> a
+foldIdemOverKeys _ [] x _ = x
+foldIdemOverKeys f (k:ks) x tm@(TotalMap d m) = case Map.lookup k m of
+    Just value -> foldIdemOverKeys f ks (f x value) tm'
+    Nothing -> foldl f (f x d) m
+    where tm' = TotalMap d (Map.delete k m)

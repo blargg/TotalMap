@@ -7,6 +7,8 @@ import TotalMapSpec
 
 main :: IO ()
 main = do
+    quickCheck testJoinBool
+    quickCheck testMeetBool
     quickCheck testCompose
     quickBatch natrualTransformToFunc
     quickBatch totalMapFunctorSpec
