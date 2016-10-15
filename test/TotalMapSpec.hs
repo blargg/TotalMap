@@ -8,10 +8,6 @@ import Test.QuickCheck.Classes
 import qualified Data.Map as Map
 import Data.TotalMap
 
-instance (Ord k, Arbitrary k, Arbitrary v) => Arbitrary (Map.Map k v) where
-    arbitrary = fmap Map.fromList arbitrary
-    shrink = map Map.fromList . shrink . Map.toList
-
 instance (Ord k, Arbitrary k, Arbitrary a) => Arbitrary (TotalMap k a) where
     arbitrary =  TotalMap <$> arbitrary <*> arbitrary
 
