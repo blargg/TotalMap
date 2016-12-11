@@ -10,20 +10,20 @@ module Data.TotalMap( TotalMap()
                     , foldMeetSemiLattice
 ) where
 
-import Data.Map (Map)
-import qualified Data.Map as Map
-import Prelude hiding (lookup)
-import Data.These (These (..))
-import Data.Align (alignWith)
-import Data.Serialize
-import Data.Universe
-import GHC.Generics
-import Algebra.Lattice
+import           Algebra.Lattice
+import           Data.Align      (alignWith)
+import           Data.Map        (Map)
+import qualified Data.Map        as Map
+import           Data.Universe
+import           Data.Serialize
+import           Data.These      (These (..))
+import           GHC.Generics
+import           Prelude         hiding (lookup)
 
-import Test.QuickCheck
+import           Test.QuickCheck
 
 data TotalMap k a = TotalMap { defaultValue :: a
-                             , values :: Map k a
+                             , values       :: Map k a
                              } deriving (Show,Eq,Generic)
 
 instance (Ord k, Serialize k, Serialize a) => Serialize (TotalMap k a)
@@ -35,8 +35,8 @@ instance (Ord k) => Applicative (TotalMap k) where
     pure x = TotalMap x Map.empty
     (TotalMap f fs) <*> (TotalMap x xs) = TotalMap (f x) (alignWith combine fs xs)
         where combine (These g y) = g y
-              combine (This g) = g x
-              combine (That y) = f y
+              combine (This g)    = g x
+              combine (That y)    = f y
 
 instance (Ord k, Arbitrary k, Arbitrary a) => Arbitrary (TotalMap k a) where
     arbitrary =  TotalMap <$> arbitrary <*> arbitrary
@@ -81,5 +81,5 @@ foldIdemOverKeys :: (Ord k) => (a -> a -> a) -> [k] -> a -> TotalMap k a -> a
 foldIdemOverKeys _ [] x _ = x
 foldIdemOverKeys f (k:ks) x tm@(TotalMap d m) = case Map.lookup k m of
     Just value -> foldIdemOverKeys f ks (f x value) tm'
-    Nothing -> foldl f (f x d) m
+    Nothing    -> foldl f (f x d) m
     where tm' = TotalMap d (Map.delete k m)
