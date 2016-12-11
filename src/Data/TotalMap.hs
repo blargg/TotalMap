@@ -14,9 +14,9 @@ import           Algebra.Lattice
 import           Data.Align      (alignWith)
 import           Data.Map        (Map)
 import qualified Data.Map        as Map
-import           Data.Universe
 import           Data.Serialize
 import           Data.These      (These (..))
+import           Data.Universe
 import           GHC.Generics
 import           Prelude         hiding (lookup)
 
