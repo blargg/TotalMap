@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 module Data.TotalMap( TotalMap()
                     , compose
                     , fromList
@@ -14,14 +15,18 @@ import qualified Data.Map as Map
 import Prelude hiding (lookup)
 import Data.These (These (..))
 import Data.Align (alignWith)
+import Data.Serialize
 import Data.Universe
+import GHC.Generics
 import Algebra.Lattice
 
 import Test.QuickCheck
 
 data TotalMap k a = TotalMap { defaultValue :: a
                              , values :: Map k a
-                             } deriving (Show,Eq)
+                             } deriving (Show,Eq,Generic)
+
+instance (Ord k, Serialize k, Serialize a) => Serialize (TotalMap k a)
 
 instance Functor (TotalMap k) where
     fmap f (TotalMap x m) = TotalMap (f x) (fmap f m)
